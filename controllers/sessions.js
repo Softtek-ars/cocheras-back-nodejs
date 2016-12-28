@@ -3,56 +3,49 @@ var md5 = require('md5');
 var ldap = require('ldap');
 
 var Session = mongoose.model("Session");
-var Login = mongoose.model("Login");
-
-//GET - Return a Session with specified ID
-exports.findById = function(req, res) {  
-    Session.findById(req.params.id, function(err, session) {
-        if(err){
-            return res.send(500, err.message);
-        }
-        else{
-            console.log('GET /session/' + req.params.id);
-            res.status(200).jsonp(session);
-        }
-    });
-};
+var User = mongoose.model("User");
 
 //POST - Insert a new Session in the DB
 exports.addSession = function(req, res) {  
-    console.log('POST - Session.addSession\n\n');
+    
+    console.log('\n--------------------------------------------------------');
+    console.log('POST - Session.addSession');
+    console.log('--------------------------------------------------------\n');
     
     var sessionUserId = req.body.username;
     var sessionPassword = req.body.password;
     var sessionDate = Date.now();
     
-    var loginUserId = "";
-    var loginUserName = "";
+    var userId = "";
+    var userName = "";
 
     console.log('Session UserId: ' + sessionUserId);
     console.log('Session Password: ' + sessionPassword);
     console.log('Session Date: ' + sessionDate);
 
     // Verify login
-    Login.find({id: sessionUserId}).exec(function(loginErr, login) {
-        if(loginErr){
-            console.log('HTTP Error [500]: ' + loginErr.message);
-            return res.status(500).send(loginErr.message);
+    User.find({id: sessionUserId}, function(userErr, user) {
+        if(userErr){
+            console.log('HTTP Error [500]: ' + userErr.message);
+            return res.status(500).send(userErr.message);
         }
         else{
-            if (login.length > 0)
+            if (user.length > 0)
             {
-                console.log('\n\nLogin: ' + login + '\n');
+                console.log('\nUser: ');
+                console.log('-----\n');
+                console.log(user);
 
                 // Login OK
-                loginUserId = login[0]._id;
-                loginUserName = login[0].name;
+                userId = user[0]._id;
+                userName = user[0].name;
+                userPassword = user[0].password;
 
-                console.log('Login UserId: ' + loginUserId);
-                console.log('Login UserName: ' + loginUserName);
+                console.log('\nUserId: ' + userId);
+                console.log('UserName: ' + userName);
 
                 // Check session open
-                Session.find({id: sessionUserId}).exec(function(err, session) {
+                Session.find({id: sessionUserId}, function(err, session) {
                     if(err){
                         console.log('HTTP Error [500]: ' + err.message);
                         return res.status(500).send(err.message);
@@ -125,10 +118,14 @@ exports.addSession = function(req, res) {
                         });
                         */
 
-                        console.log('\nSession found: \n\n' + session);
+                        console.log('\nSession:');
+                        console.log('------\n');
+                        console.log(session);
 
                         var sessionId = "";
                         var token = "";
+                        var result = null;
+                        var status = false;
 
                         if (session.length > 0)
                         {
@@ -138,25 +135,31 @@ exports.addSession = function(req, res) {
 
                         // New session
                         if (!token){
-                            //create token
+                            // create token
                             token = md5(sessionUserId + sessionPassword + sessionDate);
+                            
+                            var newSession = new Session({  id:             sessionUserId,
+                                                            username:       userName,
+                                                            token:          token,
+                                                            lastConnect:    sessionDate });
 
-                            var newSession = new Session({
-                                id:             sessionUserId,
-                                token:          token,
-                                lastConnect:    sessionDate
-                            });
+                            console.log('\nSave (new):');
+                            console.log('-----------\n');
+                            console.log(newSession);
 
-                            console.log('\nSession to create: \n\n' + newSession);
-
-                            newSession.save(function(err, session) {
+                            newSession.save(function(err) {
                                 if(err){
                                     console.log("\nSession can't save. Error: " + err.message);
                                     return res.status(500).send(err.message);
                                 }
                                 else{
-                                    console.log("\nSession save successfully!");
-                                    return res.status(200).jsonp(session);
+                                    console.log('\nSession sent:');
+                                    console.log('-------------\n');
+                                    console.log(newSession);
+
+                                    console.log("\nSession save successfully!\n");
+
+                                    return res.status(200).jsonp(newSession);
                                 }
                             });
                         }
@@ -164,7 +167,9 @@ exports.addSession = function(req, res) {
                             Session.findById(sessionId, function(err, session) {
                                 session.lastConnect = sessionDate;
 
-                                console.log('\nSession to update: \n\n' + session);
+                                console.log('\nSave (exists):');
+                                console.log('--------------\n');
+                                console.log(session);
                                 
                                 session.save(function(err) {
                                     if(err){
@@ -172,7 +177,12 @@ exports.addSession = function(req, res) {
                                         return res.status(500).send(err.message);
                                     }
                                     else{
-                                        console.log("\nSession save successfully!");
+                                        console.log('\nSession sent:');
+                                        console.log('-------------\n');
+                                        console.log(session);
+
+                                        console.log("\nSession save successfully!\n");
+
                                         return res.status(200).jsonp(session);
                                     }
                                 });
@@ -189,7 +199,7 @@ exports.addSession = function(req, res) {
 };
 
 //PUT - Update a register already exists
-exports.updateSession = function(req, res) {  
+exports.updateById = function(req, res) {  
     Session.findById(req.params.id, function(err, session) {
         session.lastConnect = req.body.lastConnect;
 
@@ -205,7 +215,7 @@ exports.updateSession = function(req, res) {
 };
 
 //DELETE - Delete a Session with specified ID
-exports.deleteSession = function(req, res) {  
+exports.deleteById = function(req, res) {  
     Session.findById(req.params.id, function(err, session) {
         session.remove(function(err) {
             if(err){
