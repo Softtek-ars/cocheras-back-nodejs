@@ -1,17 +1,23 @@
+
 var mongoose = require('mongoose');
 var Garage = mongoose.model('Garage');
 
 //GET - Return all registers
 exports.findAll = function(req, res) {
-    debugger;
+    console.log('\n--------------------------------------------------------');
     console.log('GET /garages')
-    
+    console.log('--------------------------------------------------------\n');
+
     Garage.find(function(err, garages) {
     
     if(err){
         res.send(500, err.message);
     }
     else{
+        console.log("Garages sent:")
+        console.log("-------------\n");
+        console.log(garages);
+        console.log("\n");
         res.status(200).jsonp(garages);
     }
     });
