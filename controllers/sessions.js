@@ -57,16 +57,16 @@ exports.addSession = function(req, res) {
                         
                         // Check LDAP access
 
-                        /*            
-                        ## LDAP Properties
-                        ldap.url=ldap://192.168.0.16:389
-                        ldap.base=dc=softtek,dc=com
-                        ldap.dn=MCS
-                        ldap.password=STKmcs2011
-                        ldap.user.search.filter=(sAMAccountName={0})
-                        */
+                                    
+                        //## LDAP Properties
+                        //ldap.url=ldap://192.168.0.16:389
+                        //ldap.base=dc=softtek,dc=com
+                        //ldap.dn=MCS
+                        //ldap.password=STKmcs2011
+                        //ldap.user.search.filter=(sAMAccountName={0})
+                        
 
-                        /*
+                        
                         console.log('\n\nCreating LDAP client...');
 
                         // Client
@@ -82,7 +82,7 @@ exports.addSession = function(req, res) {
                             var opts = {
                                 filter: '(sAMAccountName=nicolas.fernandez@softtek.com)',
                                 scope: 'sub'
-                            };
+                            };  
 
                             console.log('\nSearching...');
 
@@ -116,7 +116,7 @@ exports.addSession = function(req, res) {
                                 });
                             });
                         });
-                        */
+                        
 
                         console.log('\nSession:');
                         console.log('------\n');
@@ -139,7 +139,6 @@ exports.addSession = function(req, res) {
                             token = md5(sessionUserId + sessionPassword + sessionDate);
                             
                             var newSession = new Session({  id:             sessionUserId,
-                                                            username:       userName,
                                                             token:          token,
                                                             lastConnect:    sessionDate });
 
